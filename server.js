@@ -1,36 +1,49 @@
 const express = require('express');
 const connectToDB = require("./src/db/db");
+const noteModel = require("./src/models/node.model");
 
 connectToDB();
 const app = express();
 
 app.use(express.json());
 
-let all_notes = [];
-
-app.post('/notes', (req, res) => {
-    all_notes.push(req.body);
+app.post('/notes', async (req, res) => {
+    const {title, description} = req.body;
+    await noteModel.create({
+        title, description
+    })
     res.json({
         Message : "Title and Description add successful"
     })
 })
 
-app.get('/notes', (req, res) => {
-    res.json(all_notes);
+app.get('/notes', async(req, res) => {
+    const allNotes = await noteModel.find();
+
+    res.json({
+        Message : "Note fetch successful",
+        allNotes
+    })
 })
 
-app.delete('/notes/:index', (req, res)=>{
-    const index = req.params.index;
-    all_notes.splice(index-1, 1);
+app.delete('/notes/:id', async(req, res)=>{
+    const noteId = req.params.id;
+    await noteModel.findOneAndDelete({
+        _id : noteId
+    })
     res.json({
         Message : "Note Delete Successful."
     })
 })
 
-app.patch('/notes/:index', (req, res)=>{
-    const index = req.params.index;
+app.patch('/notes/:id', async(req, res)=>{
+    const noteId = req.params.id;
     const {title} = req.body;
-    all_notes[index-1].title = title;
+   await noteModel.findByIdAndUpdate({
+        _id : noteId
+   }, {
+        title : title
+   })
     res.json({
         Message : "Note update successful."
     })
